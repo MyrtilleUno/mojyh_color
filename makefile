@@ -1,6 +1,10 @@
-Yoshi_color : yoshi_color.o
-	gcc -o yoshi_color yoshi_color.o
+CC=gcc
+#CFLAGS=-Wall
+CFLAGS=
+LDFLAGS=-lm
+yoshi_color : yoshi_color.o
+	$(CC) $(CFLAGS) -o yoshi_color yoshi_color.o $(LDFLAGS)
 yoshi_color.o : yoshi_color.c
-	gcc -c yoshi_color.c -o yoshi_color.o
+	$(CC) $(CFLAGS) -c yoshi_color.c -o yoshi_color.o $(LDFLAGS)
 clean : 
 	rm -rf *.o yoshi_color
