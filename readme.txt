@@ -1,6 +1,6 @@
 Welcome to ** Yoshi_Color ** Colorimetry code
 
-Gerenal Purpose
+General Purpose
 
 
 
