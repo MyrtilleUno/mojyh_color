@@ -30,57 +30,55 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
+#define Nech 1
 
-
-#define Nechantillons 2
-#define ME_length 81
-#define Nlines 532
-double ME_data [ME_length][Nechantillons];
-char column_name[Nechantillons+1][50] ;
-double dummy_ME[Nechantillons+1];
 /*---------------------------*/
-void read_data (char* data_file){
+void read_data (char* data_file, int nech, int Nlam, int Nlines, double column_name[nech+1], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
 
   FILE* file_input = NULL;
-  int c,l;
+  int l, ech;
   file_input = fopen(data_file, "r");
-  if (file_input != NULL)
-     {}
+  if (file_input != NULL){}
   else {
     printf("impossible to read file\n");
+    return;
   }
-
-  for (c = 0; c< Nechantillons +1;c++){
-    fscanf(file_input,"%s", &column_name[c]);
-    printf( "%s\n", column_name[c]) ;
+  for (ech = 0; ech < nech +1; ech++){
+    fscanf(file_input,"%s", &column_name[ech]);
+    printf( "%s\n", column_name[ech]) ;
   }
   for (l=0; l< Nlines;l++){
-    for (c = 0; c< Nechantillons+1 ;c++){
-      fscanf(file_input,"%lf",&dummy_ME[c]);
-      /*printf( "%lf\n", dummy_ME[c]) ;*/
-  }
-    int current_lambda = dummy_ME[0];
-    if (current_lambda>=380 && current_lambda<=780 && (current_lambda % 5)==0){
-      int index_ME_data = (current_lambda -380)/5;
-
-      for (c = 0; c< Nechantillons ;c++){
-               ME_data[index_ME_data][c] = dummy_ME[c+1];
-      }
+    fscanf(file_input,"%lf", &Lambda_data[l]);
+    for (ech = 0; ech < nech ;ech++){
+      fscanf(file_input,"%lf", &ME_data[l][ech]);
     }
-
   }
-
   fclose(file_input);
   printf("data have been read correctly\n");
   printf("-------------------------------\n");
   /*printf( "%lf\n", ME_data[1][3]) ;*/
 }
+    /* Old Stuff
+       for (c = 0; c< Ech+1 ;c++){
+       fscanf(file_input,"%lf",&dummy_ME[c]);
+       }
+       int current_lambda = dummy_ME[0];
+       if (current_lambda>=380 && current_lambda<=780 && (current_lambda % 5)==0){
+       int index_ME_data = (current_lambda -380)/5;
 
-double yoshi_spectrum(double wave_length, int echantillon)
+       for (c = 0; c< Ech ;c++){
+       ME_data[index_ME_data][c] = dummy_ME[c+1];
+       ME_expected[index_ME_data][c] = dummy_ME[c+1];
+       }
+       End of old stuff*/
+
+
+double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, double ME_expected [nlam][nech])
 {
     int lambda_index = (wave_length -380.0) / 5;
 /*    printf( "%lf\n", ME_data [lambda_index][echantillon]) ;*/
-    return ME_data [lambda_index][echantillon];
+    return ME_expected [lambda_index][echantillon];
 
 }
 /*                          SPECTRUM_TO_XYZ
@@ -97,6 +95,95 @@ double yoshi_spectrum(double wave_length, int echantillon)
             x + y + z = 1.
 */
 /*---------------------------*/
+
+double interpolation (double lambda1, double val1, double lambda2, double val2, double lambda_expected)
+{
+  return (val2 - val1) / (lambda2 - lambda1) * (lambda_expected - lambda1) + val1;
+} 
+
+/* prerequisites : lambda_expected belongs to [lambda1, lambda2] */
+double match_value (double lambda1, double val1, double lambda2, double val2, double lambda_expected)
+{
+  double result = 0.0;
+  if (lambda1 == lambda_expected) {result = val1;}
+  else if (lambda2 == lambda_expected) {result = val2;}
+  else {result = interpolation(lambda1, val1, lambda2, val2, lambda_expected);}
+  //printf("%lf\t %lf\t %lf\t %lf\t %lf\t %lf\n", lambda1, lambda2, lambda_expected, val1, val2, result);
+  return result;
+}
+
+struct index_values {    
+ int index;
+ double values[Nech];
+};
+
+void print_1Dtable (int l1, double t[l1])
+{
+  int i = 0;
+  for (i = 0; i < l1; i++){printf("%lf\n", t[i]);}
+  return;
+}
+
+void print_2Dtable (int l1, int l2, double t[l1][l2])
+{
+  int i1 = 0; int i2 = 0;
+  for (i1 = 0; i1 < l1; i1++){
+    for (i2 = 0; i2 < l2-1; i2++){
+      printf("%lf\t", t[i1][i2]);
+    }
+    printf("%lf\n", t[i1][l2 - 1]);
+  }
+  return;
+}
+
+void initialize_Lambda (int nlam, double Lambda[nlam])
+{
+  double lambda = 380.0; int lam_idx = 0;
+  for (lam_idx = 0; lam_idx < nlam; lam_idx++) {
+    Lambda[lam_idx] = lambda;
+    lambda += 5.0;
+  }
+  return;
+}
+
+bool belongs_interval (double lambda1, double lambda2, double lambda_expected) {
+ return (lambda1 <= lambda_expected &&  lambda_expected <= lambda2) || (lambda2 <= lambda_expected &&  lambda_expected <= lambda1);
+}
+
+struct index_values search_values (int lam_idx, int idx, int nlam, int nech, int nlam_data, double Lambda[nlam], double Lambda_data[nlam_data], double ME_expected [nlam][nech], double ME_data[nlam_data][nech]){
+ struct index_values r;
+ double lambda_expected = Lambda[lam_idx]; int i = 0;
+ double lambda1, lambda2 = 0.0;
+ for (i = idx; i < nlam_data - 1; i++){
+   lambda1 = Lambda_data[i]; lambda2 = Lambda_data[i + 1];
+   if (belongs_interval (lambda1, lambda2, lambda_expected)){ 
+     int ech = 0;
+     for (ech = 0; ech < nech; ech++) {
+       double val1 = ME_data[i][ech]; double val2 = ME_data[i+1][ech];
+       r.values[ech] = match_value (lambda1, val1, lambda2, val2, lambda_expected);
+     }
+     //r.index = i + 1; // Hack to accelerate search : only works when data are sorted with increasing lambda
+     r.index = 0;
+     break;
+   }
+ }
+ return r;
+}
+
+void ME_interpolation (int nlam, int nech, int nlam_data, double Lambda[nlam], double Lambda_data[nlam_data], double ME_expected [nlam][nech], double ME_data[nlam_data][nech])
+{
+  int lam_idx = 0; int idx = 0; double value = 0.0;
+  for (lam_idx = 0; lam_idx < nlam; lam_idx++){
+    struct index_values couple = search_values (lam_idx, idx, nlam, nech, nlam_data, Lambda, Lambda_data, ME_expected, ME_data);
+    idx = couple.index;
+    int ech = 0;
+    for (ech = 0; ech < nech; ech++) {
+      ME_expected [lam_idx][ech] = couple.values[ech];
+    }
+  }
+  return;
+}
+
 void spectrum_to_xyz(double (*spec_intens)(double wavelength),
                      double *x, double *y, double *z)
 {
@@ -167,7 +254,7 @@ et z tels qu'ils sont définis dans les conventions
 de notations mais rend les valeur _X_ etc.  qui sont le rapport : X/Xn */
 
 /*---------------------------*/
-void spectrum_to_XYZ(double (*spec_intens)(double wavelength, int spec_echan),
+void spectrum_to_XYZ(int nlam, int nech, double ME_expected[nlam][nech],
                      double *_X_, double *_Y_, double *_Z_, int echantillon)
 {
     int i;
@@ -252,10 +339,10 @@ static double cie_colour_match[81][3] = {
 {0.000083,0.00003,0.0}, {0.000059,0.000021,0.0}, {0.000042,0.000015,0.0}
 };
 
-    for (i = 0, lambda = 380; lambda < 780.1; i++, lambda += 5) {
+    for (i = 0; i < nlam; i++) {
         double Me;
 
-        Me = (*spec_intens)(lambda,echantillon);
+        Me = ME_expected[i][echantillon];
         X += 5* Me * cie_colour_match[i][0] * D65[i][0] ;
         Y += 5* Me * cie_colour_match[i][1] * D65[i][0];
         Z += 5* Me * cie_colour_match[i][2] * D65[i][0];
@@ -349,13 +436,13 @@ pclose(cmd);
 }
 
 /*---------------------------*/
-void write_Lab (int Nech, double Phys[30][3],char* FILE_OUT) {
+void write_Lab (int nech, double Phys[30][3],char* FILE_OUT, double column_name[nech+1]) {
 
   int j=0;
   FILE* file_out = NULL;
   file_out = fopen(FILE_OUT, "w");
 	 fprintf(file_out,"sample_name L a b\n");
-  for (j=0;j<Nech;j++) {
+  for (j=0;j<nech;j++) {
 
     //fprintf(file_out,"%.4le %20.15le\n",freq(j),Fourier_Phys[j]);
     //fprintf(file_out,"%d %20.15le\n",j,Fourier_Phys[j]);
@@ -369,13 +456,13 @@ void write_Lab (int Nech, double Phys[30][3],char* FILE_OUT) {
 }
 
 /*---------------------------*/
-void write_xyz (int Nech, double Phys[30][3],char* FILE_OUT) {
+void write_xyz (int nech, double Phys[30][3],char* FILE_OUT, double column_name[nech+1]) {
 	
 	int j=0;
 	FILE* file_out = NULL;
 	file_out = fopen(FILE_OUT, "w");
 	fprintf(file_out,"sample_name x y z\n");
-	for (j=0;j<Nech;j++) {
+	for (j=0;j<nech;j++) {
 		
 		//fprintf(file_out,"%.4le %20.15le\n",freq(j),Fourier_Phys[j]);
 		//fprintf(file_out,"%d %20.15le\n",j,Fourier_Phys[j]);
@@ -456,6 +543,7 @@ int mygeti(int *result)
 int main(int argc, char* argv[])
 { double Lab[30][3];
  double XYZ[30][3];
+
    printf("-------------------------------\n");
    printf("  STARTING PROGRAM\n");
 	  printf("-------------------------------\n");
@@ -468,19 +556,31 @@ int main(int argc, char* argv[])
    printf("D65 illuminant and CIE 1931 2° observer will be used\n");
    printf("-------------------------------\n");
 /*printf("File is: %s\n",argv[1]);*/
-  read_data(argv[1]);
   int Ech;
   do {
 	fputs("Enter the number of spectra in your input file: ", stdout);
 	fflush(stdout);
 	} while ( !mygeti(&Ech) );
   printf("number of spectra = %d\n", Ech);
-		
+
+  int Nlam = 81; int Nlines = 2048;
+  char column_name[Ech+1][50];
+  double Lambda [Nlam];
+  double Lambda_data [Nlines];
+  double ME_data [Nlines][Ech];
+  double ME_expected [Nlam][Ech];
+
+  initialize_Lambda (Nlam, Lambda);
+  read_data(argv[1],Ech, Nlam, Nlines, column_name, Lamda_data, ME_data);
+  print_1Dtable(Lines, Lambda_data);
+  print_2Dtable(Lines, Ech, ME_data);
+	ME_interpolation (Lam, Ech, Lines, Lambda, Lambda_data, ME_expected, ME_data);
+
   /*  printf("  %5.5lf x  %5.5lf y   %5.5lf z\n",_X_,_Y_,_Z_);*/
   int i =0;
   for (i=0; i<Ech; i++){
       double _X_, _Y_, _Z_, L, a,b;
-	  spectrum_to_XYZ(yoshi_spectrum,&_X_,&_Y_,&_Z_,i);
+	  spectrum_to_XYZ(Nlam, Ech, ME_expected, yoshi_spectrum,&_X_,&_Y_,&_Z_,i);
 	  XYZ_to_lab ((*f), &_X_, &_Y_, &_Z_, &L, &a, &b);
 	  Lab[i][0]= L;
 	  Lab[i][1]= a;
@@ -498,9 +598,9 @@ int main(int argc, char* argv[])
   }
 	printf("-------------------------------\n");
 	printf("  Generate 'lab_data' file containing L*a*b* values ::: DONE \n");
-	write_Lab(Ech, Lab, "Lab_data");
+	write_Lab(Ech, Lab, "Lab_data", column_name);
 	printf("  Generate 'xyz_data' file containing xyz values  ::: DONE \n");
-	write_xyz(Ech, XYZ, "xyz_data");
+	write_xyz(Ech, XYZ, "xyz_data", column_name);
 	/*Draw_Node_Graph("Lab_data", "a", "b", "[:]",Lab);
 /*Draw_Node_Graph("Lab_data_B13", "L", "a", "[:]",Lab);
 Draw_Node_Graph("Lab_data_B13", "L", "b", "[:]",Lab);*/
