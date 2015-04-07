@@ -187,7 +187,7 @@ struct index_values search_values (int lam_idx, int idx, int nlam, int nech, int
    if (belongs_interval (lambda1, lambda2, lambda_expected)){ 
      int ech = 0;
      for (ech = 0; ech < nech; ech++) {
-       double val1 = ME_data[i][ech]/100.0; double val2 = ME_data[i+1][ech]/100.0;
+       double val1 = ME_data[i][ech]; double val2 = ME_data[i+1][ech];
        r.values[ech] = match_value (lambda1, val1, lambda2, val2, lambda_expected);
      }
      //r.index = i + 1; // Hack to accelerate search : only works when data are sorted with increasing lambda
@@ -604,8 +604,6 @@ int main_yoshi (int nlines, int nech, char* data_file)
 
   initialize_Lambda (Nlam, Lambda);
   read_data(data_file, Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);
-  print_1Dtable(Nlines, Lambda_data);
-  print_2Dtable(Nlines, Ech, ME_data);
 	ME_interpolation (Nlam, Ech, Nlines, Lambda, Lambda_data, ME_expected, ME_data);
 
   /*  printf("  %5.5lf x  %5.5lf y   %5.5lf z\n",_X_,_Y_,_Z_);*/
