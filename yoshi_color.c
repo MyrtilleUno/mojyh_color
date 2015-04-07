@@ -190,7 +190,7 @@ struct index_values search_values (int lam_idx, int idx, int nlam, int nech, int
    if (belongs_interval (lambda1, lambda2, lambda_expected)){ 
      int ech = 0;
      for (ech = 0; ech < nech; ech++) {
-       double val1 = ME_data[i][ech]; double val2 = ME_data[i+1][ech];
+       double val1 = ME_data[i][ech]/100.0; double val2 = ME_data[i+1][ech]/100.0;
        r.values[ech] = match_value (lambda1, val1, lambda2, val2, lambda_expected);
      }
      //r.index = i + 1; // Hack to accelerate search : only works when data are sorted with increasing lambda
