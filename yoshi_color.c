@@ -32,9 +32,10 @@
 #include <math.h>
 #include <stdbool.h>
 #define Nech 1
+#define Word 100
 
-/*---------------------------*/
-void read_data (char* data_file, int nech, int Nlam, int Nlines, double column_name[nech+1], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
+/*
+void get_parameters (char* data_file){
 
   FILE* file_input = NULL;
   int l, ech;
@@ -44,8 +45,38 @@ void read_data (char* data_file, int nech, int Nlam, int Nlines, double column_n
     printf("impossible to read file\n");
     return;
   }
+  char string1[Word]; char string2[Word];
+  double*dbl;
+  b = true;
+  while (true){
+    if b {fscanf(file_input,"%s", string1); b = false;} else {fscanf(file_input,"%s", string2); b = true;}
+    if (sscanf(string1, "%f", &d) == 1 && sscanf(string2, "%f", &dbl) == 1) {break;}
+
+   }
+   fscanf(file_input,"%s", string2);
+     if sscanf(string1, "%f", &nombrefloat) == 1 && 
+  }
+
+
+}
+
+\*
+
+/*---------------------------*/
+void read_data (char* data_file, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
+
+  FILE* file_input = NULL;
+  int l, ech;
+  file_input = fopen(data_file, "r");
+  if (file_input != NULL){}
+  else {
+    printf("impossible to read file\n");
+    return;
+  }
+
+
   for (ech = 0; ech < nech +1; ech++){
-    fscanf(file_input,"%s", &column_name[ech]);
+    fscanf(file_input,"%s", column_name[ech]);
     printf( "%s\n", column_name[ech]) ;
   }
   for (l=0; l< Nlines;l++){
@@ -254,8 +285,7 @@ et z tels qu'ils sont définis dans les conventions
 de notations mais rend les valeur _X_ etc.  qui sont le rapport : X/Xn */
 
 /*---------------------------*/
-void spectrum_to_XYZ(int nlam, int nech, double ME_expected[nlam][nech],
-                     double *_X_, double *_Y_, double *_Z_, int echantillon)
+void spectrum_to_XYZ(int nlam, int nech, double ME_expected[nlam][nech], double *_X_, double *_Y_, double *_Z_, int echantillon)
 {
     int i;
     double lambda, Xn = 0, Yn = 0, Zn = 0,  X = 0, Y = 0, Z = 0, K=0, K2=0 ;
@@ -436,7 +466,7 @@ pclose(cmd);
 }
 
 /*---------------------------*/
-void write_Lab (int nech, double Phys[30][3],char* FILE_OUT, double column_name[nech+1]) {
+void write_Lab (int nech, double Phys[30][3],char* FILE_OUT, char column_name[nech+1][Word]) {
 
   int j=0;
   FILE* file_out = NULL;
@@ -456,7 +486,7 @@ void write_Lab (int nech, double Phys[30][3],char* FILE_OUT, double column_name[
 }
 
 /*---------------------------*/
-void write_xyz (int nech, double Phys[30][3],char* FILE_OUT, double column_name[nech+1]) {
+void write_xyz (int nech, double Phys[30][3],char* FILE_OUT, char column_name[nech+1][Word]) {
 	
 	int j=0;
 	FILE* file_out = NULL;
@@ -564,23 +594,23 @@ int main(int argc, char* argv[])
   printf("number of spectra = %d\n", Ech);
 
   int Nlam = 81; int Nlines = 2048;
-  char column_name[Ech+1][50];
+  char column_name[Ech+1][Word];
   double Lambda [Nlam];
   double Lambda_data [Nlines];
   double ME_data [Nlines][Ech];
   double ME_expected [Nlam][Ech];
 
   initialize_Lambda (Nlam, Lambda);
-  read_data(argv[1],Ech, Nlam, Nlines, column_name, Lamda_data, ME_data);
-  print_1Dtable(Lines, Lambda_data);
-  print_2Dtable(Lines, Ech, ME_data);
-	ME_interpolation (Lam, Ech, Lines, Lambda, Lambda_data, ME_expected, ME_data);
+  read_data(argv[1],Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);
+  print_1Dtable(Nlines, Lambda_data);
+  print_2Dtable(Nlines, Ech, ME_data);
+	ME_interpolation (Nlam, Ech, Nlines, Lambda, Lambda_data, ME_expected, ME_data);
 
   /*  printf("  %5.5lf x  %5.5lf y   %5.5lf z\n",_X_,_Y_,_Z_);*/
   int i =0;
   for (i=0; i<Ech; i++){
       double _X_, _Y_, _Z_, L, a,b;
-	  spectrum_to_XYZ(Nlam, Ech, ME_expected, yoshi_spectrum,&_X_,&_Y_,&_Z_,i);
+	  spectrum_to_XYZ(Nlam, Ech, ME_expected, &_X_, &_Y_, &_Z_, i);
 	  XYZ_to_lab ((*f), &_X_, &_Y_, &_Z_, &L, &a, &b);
 	  Lab[i][0]= L;
 	  Lab[i][1]= a;
