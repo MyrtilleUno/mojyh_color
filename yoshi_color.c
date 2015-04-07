@@ -31,8 +31,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
-#define Nech 1
-#define Word 100
+#include "yoshi_color.h"
 
 /*
 void get_parameters (char* data_file){
@@ -60,9 +59,11 @@ void get_parameters (char* data_file){
 
 }
 
-\*
+*/
 
 /*---------------------------*/
+
+
 void read_data (char* data_file, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
 
   FILE* file_input = NULL;
@@ -143,10 +144,6 @@ double match_value (double lambda1, double val1, double lambda2, double val2, do
   return result;
 }
 
-struct index_values {    
- int index;
- double values[Nech];
-};
 
 void print_1Dtable (int l1, double t[l1])
 {
@@ -570,7 +567,10 @@ int mygeti(int *result)
 
 
 /*---------------------------*/
-int main(int argc, char* argv[])
+
+
+
+int main_yoshi (int nlines, int nech, char* data_file)
 { double Lab[30][3];
  double XYZ[30][3];
 
@@ -586,14 +586,16 @@ int main(int argc, char* argv[])
    printf("D65 illuminant and CIE 1931 2° observer will be used\n");
    printf("-------------------------------\n");
 /*printf("File is: %s\n",argv[1]);*/
-  int Ech;
+  int Ech = nech;
+  /*
   do {
 	fputs("Enter the number of spectra in your input file: ", stdout);
 	fflush(stdout);
 	} while ( !mygeti(&Ech) );
   printf("number of spectra = %d\n", Ech);
-
-  int Nlam = 81; int Nlines = 2048;
+  */
+  printf("number of spectra = %d\n", Ech);
+  int Nlam = 81; int Nlines = nlines;
   char column_name[Ech+1][Word];
   double Lambda [Nlam];
   double Lambda_data [Nlines];
@@ -601,7 +603,7 @@ int main(int argc, char* argv[])
   double ME_expected [Nlam][Ech];
 
   initialize_Lambda (Nlam, Lambda);
-  read_data(argv[1],Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);
+  read_data(data_file, Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);
   print_1Dtable(Nlines, Lambda_data);
   print_2Dtable(Nlines, Ech, ME_data);
 	ME_interpolation (Nlam, Ech, Nlines, Lambda, Lambda_data, ME_expected, ME_data);
