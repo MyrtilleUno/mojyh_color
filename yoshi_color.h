@@ -1,6 +1,5 @@
 #ifndef _YOSHI_COLOR_H_
 #define _YOSHI_COLOR_H_
-#define Nech 1
 #define Word 100
 
 void read_data (char* data_file, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]);
@@ -13,7 +12,8 @@ extern double match_value (double lambda1, double val1, double lambda2, double v
 
 struct index_values {    
  int index;
- double values[Nech];
+ int size;
+ double* values;
 };
 typedef struct index_values index_values;
 

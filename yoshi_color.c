@@ -29,6 +29,8 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <stdbool.h>
 #include "yoshi_color.h"
@@ -64,17 +66,20 @@ void get_parameters (char* data_file){
 /*---------------------------*/
 
 
-void read_data (char* data_file, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
+void read_data (char* data, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
 
   FILE* file_input = NULL;
+
   int l, ech;
-  file_input = fopen(data_file, "r");
+
+  file_input = fmemopen (data, strlen (data), "r");
+/*  file_input = fopen(data_file, "r");
   if (file_input != NULL){}
   else {
     printf("impossible to read file\n");
     return;
   }
-
+*/
 
   for (ech = 0; ech < nech +1; ech++){
     fscanf(file_input,"%s", column_name[ech]);
@@ -180,6 +185,7 @@ bool belongs_interval (double lambda1, double lambda2, double lambda_expected) {
 
 struct index_values search_values (int lam_idx, int idx, int nlam, int nech, int nlam_data, double Lambda[nlam], double Lambda_data[nlam_data], double ME_expected [nlam][nech], double ME_data[nlam_data][nech]){
  struct index_values r;
+ r.size = nech; r.values = (double*)malloc(nech*sizeof(double));
  double lambda_expected = Lambda[lam_idx]; int i = 0;
  double lambda1, lambda2 = 0.0;
  for (i = idx; i < nlam_data - 1; i++){
@@ -208,6 +214,7 @@ void ME_interpolation (int nlam, int nech, int nlam_data, double Lambda[nlam], d
     for (ech = 0; ech < nech; ech++) {
       ME_expected [lam_idx][ech] = couple.values[ech];
     }
+    free (couple.values);
   }
   return;
 }
@@ -503,6 +510,7 @@ void write_xyz (int nech, double Phys[30][3],char* FILE_OUT, char column_name[ne
 }
 /*---------------------------*/
 void header () {
+  if (false) {
 	
 	printf("                          @@@  @@@                 \n");
 	printf("                          @@@  @@@                 \n");
@@ -553,7 +561,8 @@ void header () {
 	printf("      @@+++++''''#@+++'''''#@                      \n");
 	printf("      @@+++++''''#@+++'''''@@                      \n");
 	printf("      @@@@@@@@@@@@@@@@@@@@@@@    \n");    	
-	
+  }
+  else printf("\n");
 }
 
 /*---------------------------*/

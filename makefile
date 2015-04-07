@@ -1,9 +1,13 @@
 CC=gcc
+LEX=lex
 #CFLAGS=-Wall
 CFLAGS=
 LDFLAGS=-lm
-yoshi_color : yoshi_color.o
-	$(CC) $(CFLAGS) -o yoshi_color yoshi_color.o $(LDFLAGS)
+LDLEXFLAGS=-lm -lfl -lc
+yoshi_color : scanner.c
+	$(CC) $(CFLAGS) -o yoshi_color scanner.c yoshi_color.o $(LDLEXFLAGS)
+scanner.c : yoshi_color.o
+	$(LEX) -o scanner.c scanner.lex
 yoshi_color.o : yoshi_color.c
 	$(CC) $(CFLAGS) -c yoshi_color.c -o yoshi_color.o $(LDFLAGS)
 clean : 

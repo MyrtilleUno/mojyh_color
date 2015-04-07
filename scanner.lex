@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <string.h>
 #include "yoshi_color.h"
+char data[10000000];
 int nblank_lines, nlines, nword, nchar, ncols;
 bool is_first_ech_line = true;
 
@@ -13,6 +15,15 @@ char* remove_string (int length, char text[length]) {
     r[c] = text[c];
   }
   return r;
+}
+
+void initialize_data () {
+  int ech = 0;
+  char str[Word];
+  for (ech = 0; ech < ncols - 1; ech++) {
+    strcat (data, "column"); sprintf(str, "%d",ech); strcat(data, str); strcat (data, " "); 
+  }
+  strcat (data, "column"); sprintf(str, "%d",ech); strcat(data, str); strcat (data, "\n"); 
 }
 
 void check_ncols (int length, char text[length]) {
@@ -29,6 +40,7 @@ void check_ncols (int length, char text[length]) {
   if (is_first_ech_line) {
     is_first_ech_line = false;
     ncols = w;
+    initialize_data ();
   }
   else {if (ncols != w) {printf("Bad number of samples : %s\n", text); abort();}}
 }
@@ -43,8 +55,8 @@ num_windows {num_blank}+{num}[\r]$
 num_list {num_blank}+{num}$
 
 %%
-{num_windows} { nlines++;  check_ncols (yyleng - 1, remove_string (yyleng, yytext)); yymore(); }
-{num_list} { nlines++; check_ncols (yyleng, yytext); yymore(); }
+{num_windows} { nlines++; char* tmp = remove_string (yyleng, yytext); check_ncols (yyleng - 1, tmp); strcat(data, tmp); strcat(data, "\n"); yymore(); }
+{num_list} { nlines++; check_ncols (yyleng, yytext); strcat(data, yytext); strcat(data, "\n"); yymore(); }
 ^{nl} { nblank_lines++; nchar++; }
 [^ \t\n\r]+ { nword++; nchar+= yyleng; }
 .|{nl} { ; }
@@ -64,6 +76,6 @@ int main (int argc, char* argv[]) {
 	yylex();
   fclose(myfile);
   printf("%d\t%d\t%d\n", nblank_lines, nlines, ncols - 1);
-  return main_yoshi(nlines, ncols-1, data_file);
+  return main_yoshi(nlines, ncols-1, data);
 
 }
