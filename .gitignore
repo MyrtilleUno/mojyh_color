@@ -23,3 +23,7 @@ _build
 yoshi_color
 Yoshi_color
 gothor
+*.txt
+*_data
+scanner.c
+scanner.h
