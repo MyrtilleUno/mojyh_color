@@ -641,7 +641,7 @@ int main_yoshi (int nlines, int nech, char* data_file)
 	printf("  Generate 'xyz_data' file containing xyz values  ::: DONE \n");
 	write_xyz(Ech, XYZ, "xyz_data", column_name);
 	/*Draw_Node_Graph("Lab_data", "a", "b", "[:]",Lab);
-/*Draw_Node_Graph("Lab_data_B13", "L", "a", "[:]",Lab);
+Draw_Node_Graph("Lab_data_B13", "L", "a", "[:]",Lab);
 Draw_Node_Graph("Lab_data_B13", "L", "b", "[:]",Lab);*/
 printf("-------------------------------\n");
 printf("   NORMAL END\n");
