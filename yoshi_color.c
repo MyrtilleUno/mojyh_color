@@ -867,7 +867,8 @@ int main_yoshi (int nlines, int nech, char* data_file, bool is_quanty)
   double ME_expected [Nlam][Ech];
 
   initialize_Lambda (Nlam, Lambda);
-  read_data(data_file, Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);
+  if (is_quanty) {read_data_quanty(data_file, Nlam, Nlines, column_name, Lambda_data, ME_data);}
+  else {read_data(data_file, Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);}
   ME_interpolation (Nlam, Ech, Nlines, Lambda, Lambda_data, ME_expected, ME_data);
 
   /*  printf("  %5.5lf x  %5.5lf y   %5.5lf z\n",_X_,_Y_,_Z_);*/
