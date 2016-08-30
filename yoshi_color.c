@@ -4,13 +4,13 @@
  Programme écrit en langage C permettant de calculer les coordonnées Lab d'une couleur
  à partir du spectre de transmission de l'échantillon.
  
- Les données d'entrées doivent se présenter sous forme de colones :
- - 1er colone : longueurs d'onde 
- - colones suivantes : données en transmission (entre 0 et 1)
+ Les données d'entrée doivent se présenter sous forme de colonnes :
+ - 1er colonne : longueurs d'onde 
+ - colonnes suivantes : données en transmission (entre 0 et 1)
  
  les spectres doivent couvrir la gamme 380 - 780 nm / 5nm.
  
- le programme calcul les coordinnées Lab avec pour illuminant D65 et observer CIE 1931 2°;
+ le programme calcule les coordonnées Lab avec pour illuminant D65 et observer CIE 1931 2°;
  
  
  2012 - Myrtille Hunault
@@ -22,6 +22,12 @@
  - removed the plotting in the main
  - add a 4th argument in write_Lab as the number of samples form the value "Ech" of the main
  - duplicate the write_Lab into write_wyz function to definite columns names in each output file
+ 
+ ********
+ Upgrade - 2016 - Myrtille Hunault
+ - adding the compatibility with spectra calculated by Quanty
+ - adding the extraction of RGB values
+ - adding the conversion to the hexadecimal code of the color
  
  
  ********
@@ -57,10 +63,7 @@ void get_parameters (char* data_file){
    fscanf(file_input,"%s", string2);
      if sscanf(string1, "%f", &nombrefloat) == 1 && 
   }
-
-
 }
-
 */
 
 /*---------------------------*/
@@ -118,19 +121,67 @@ double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, d
     return ME_expected [lambda_index][echantillon];
 
 }
-/*                          SPECTRUM_TO_XYZ
 
-    Calculate the CIE X, Y, and Z coordinates corresponding to
-    a light source with spectral distribution given by  the
-    function SPEC_INTENS, which is called with a series of
-    wavelengths between 380 and 780 nm (the argument is
-    expressed in meters), which returns emittance at  that
-    wavelength in arbitrary units.  The chromaticity
-    coordinates of the spectrum are returned in the x, y, and z
-    arguments which respect the identity:
 
-            x + y + z = 1.
-*/
+/*---------------------------*/
+/* special function for spectra calculated by quanty */
+/*---------------------------*/
+
+// 
+// void read_data_quanty (char* data, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
+// 
+//   FILE* file_input = NULL;
+// 
+//   int l, ech;
+// 
+//   file_input = fmemopen (data, strlen (data), "r");
+// /*  file_input = fopen(data_file, "r");
+//   if (file_input != NULL){}
+//   else {
+//     printf("impossible to read file\n");
+//     return;
+//   }
+// */
+// 
+//   for (ech = 0; ech < nech +1; ech++){
+//     fscanf(file_input,"%s", column_name[ech]);
+//     printf( "%s\n", column_name[ech]) ;
+//   }
+//   for (l=0; l< Nlines;l++){
+//     fscanf(file_input,"%lf", &Lambda_data[l]);
+//     for (ech = 0; ech < nech ;ech++){
+//       fscanf(file_input,"%lf", &ME_data[l][ech]);
+//     }
+//   }
+//   fclose(file_input);
+//   printf("data have been read correctly\n");
+//   printf("-------------------------------\n");
+//   /*printf( "%lf\n", ME_data[1][3]) ;*/
+// }
+//     /* Old Stuff
+//        for (c = 0; c< Ech+1 ;c++){
+//        fscanf(file_input,"%lf",&dummy_ME[c]);
+//        }
+//        int current_lambda = dummy_ME[0];
+//        if (current_lambda>=380 && current_lambda<=780 && (current_lambda % 5)==0){
+//        int index_ME_data = (current_lambda -380)/5;
+// 
+//        for (c = 0; c< Ech ;c++){
+//        ME_data[index_ME_data][c] = dummy_ME[c+1];
+//        ME_expected[index_ME_data][c] = dummy_ME[c+1];
+//        }
+//        End of old stuff*/
+// 
+// 
+// double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, double ME_expected [nlam][nech])
+// {
+//     int lambda_index = (wave_length -380.0) / 5;
+// /*    printf( "%lf\n", ME_data [lambda_index][echantillon]) ;*/
+//     return ME_expected [lambda_index][echantillon];
+// 
+// }
+
+
 /*---------------------------*/
 
 double interpolation (double lambda1, double val1, double lambda2, double val2, double lambda_expected)
@@ -219,72 +270,252 @@ void ME_interpolation (int nlam, int nech, int nlam_data, double Lambda[nlam], d
   return;
 }
 
-void spectrum_to_xyz(double (*spec_intens)(double wavelength),
-                     double *x, double *y, double *z)
+
+ /*-----------------------------------*/
+
+/* The following functions come from the public domain code :
+
+ 				 Colour Rendering of Spectra
+
+                       by John Walker
+                  http://www.fourmilab.ch/
+		  
+		 Last updated: March 9, 2003
+
+ They are used to perform the conversion of the values calculated from 
+ the spectra to RBG.
+ 
+ */
+ 
+ 
+ /*-----------------------------------*/
+
+
+/* A colour system is defined by the CIE x and y coordinates of
+   its three primary illuminants and the x and y coordinates of
+   the white point. */
+
+struct colourSystem {
+    char *name;     	    	    /* Colour system name */
+    double xRed, yRed,	    	    /* Red x, y */
+           xGreen, yGreen,  	    /* Green x, y */
+           xBlue, yBlue,    	    /* Blue x, y */
+           xWhite, yWhite,  	    /* White point x, y */
+	   gamma;   	    	    /* Gamma correction for system */
+};
+
+/* White point chromaticities. */
+
+#define IlluminantC     0.3101, 0.3162	    	/* For NTSC television */
+#define IlluminantD65   0.3127, 0.3291	    	/* For EBU and SMPTE */
+#define IlluminantE 	0.33333333, 0.33333333  /* CIE equal-energy illuminant */
+
+/*  Gamma of nonlinear correction.
+
+    See Charles Poynton's ColorFAQ Item 45 and GammaFAQ Item 6 at:
+    
+       http://www.poynton.com/ColorFAQ.html
+       http://www.poynton.com/GammaFAQ.html
+ 
+*/
+
+#define GAMMA_REC709	0		/* Rec. 709 */
+
+static struct colourSystem
+                  /* Name                  xRed    yRed    xGreen  yGreen  xBlue  yBlue    White point        Gamma   */
+    NTSCsystem  =  { "NTSC",               0.67,   0.33,   0.21,   0.71,   0.14,   0.08,   IlluminantC,    GAMMA_REC709 },
+    EBUsystem   =  { "EBU (PAL/SECAM)",    0.64,   0.33,   0.29,   0.60,   0.15,   0.06,   IlluminantD65,  GAMMA_REC709 },
+    SMPTEsystem =  { "SMPTE",              0.630,  0.340,  0.310,  0.595,  0.155,  0.070,  IlluminantD65,  GAMMA_REC709 },
+    HDTVsystem  =  { "HDTV",               0.670,  0.330,  0.210,  0.710,  0.150,  0.060,  IlluminantD65,  GAMMA_REC709 },
+    CIEsystem   =  { "CIE",                0.7355, 0.2645, 0.2658, 0.7243, 0.1669, 0.0085, IlluminantE,    GAMMA_REC709 },
+    Rec709system = { "CIE REC 709",        0.64,   0.33,   0.30,   0.60,   0.15,   0.06,   IlluminantD65,  GAMMA_REC709 };
+
+
+/*                             XYZ_TO_RGB
+
+    Given an additive tricolour system CS, defined by the CIE x
+    and y chromaticities of its three primaries (z is derived
+    trivially as 1-(x+y)), and a desired chromaticity (XC, YC,
+    ZC) in CIE space, determine the contribution of each
+    primary in a linear combination which sums to the desired
+    chromaticity.  If the  requested chromaticity falls outside
+    the Maxwell  triangle (colour gamut) formed by the three
+    primaries, one of the r, g, or b weights will be negative. 
+
+    Caller can use constrain_rgb() to desaturate an
+    outside-gamut colour to the closest representation within
+    the available gamut and/or norm_rgb to normalise the RGB
+    components so the largest nonzero component has value 1.
+    
+*/
+
+void xyz_to_rgb(struct colourSystem *cs,
+                double xc, double yc, double zc,
+                double *r, double *g, double *b)
 {
-    int i;
-    double lambda, X = 0, Y = 0, Z = 0, XYZ;
+    double xr, yr, zr, xg, yg, zg, xb, yb, zb;
+    double xw, yw, zw;
+    double rx, ry, rz, gx, gy, gz, bx, by, bz;
+    double rw, gw, bw;
 
-    /* CIE colour matching functions xBar, yBar, and zBar for
-       wavelengths from 380 through 780 nanometers, every 5
-       nanometers.  For a wavelength lambda in this range:
+    xr = cs->xRed;    yr = cs->yRed;    zr = 1 - (xr + yr);
+    xg = cs->xGreen;  yg = cs->yGreen;  zg = 1 - (xg + yg);
+    xb = cs->xBlue;   yb = cs->yBlue;   zb = 1 - (xb + yb);
 
-            cie_colour_match[(lambda - 380) / 5][0] = xBar
-            cie_colour_match[(lambda - 380) / 5][1] = yBar
-            cie_colour_match[(lambda - 380) / 5][2] = zBar
+    xw = cs->xWhite;  yw = cs->yWhite;  zw = 1 - (xw + yw);
 
-  To save memory, this table can be declared as floats
-  rather than doubles; (IEEE) float has enough
-  significant bits to represent the values. It's declared
-  as a double here to avoid warnings about "conversion
-  between floating-point types" from certain persnickety
-  compilers. */
+    /* xyz -> rgb matrix, before scaling to white. */
+    
+    rx = (yg * zb) - (yb * zg);  ry = (xb * zg) - (xg * zb);  rz = (xg * yb) - (xb * yg);
+    gx = (yb * zr) - (yr * zb);  gy = (xr * zb) - (xb * zr);  gz = (xb * yr) - (xr * yb);
+    bx = (yr * zg) - (yg * zr);  by = (xg * zr) - (xr * zg);  bz = (xr * yg) - (xg * yr);
 
-    static double cie_colour_match[81][3] = {
-        {0.0014,0.0000,0.0065}, {0.0022,0.0001,0.0105}, {0.0042,0.0001,0.0201},
-        {0.0076,0.0002,0.0362}, {0.0143,0.0004,0.0679}, {0.0232,0.0006,0.1102},
-        {0.0435,0.0012,0.2074}, {0.0776,0.0022,0.3713}, {0.1344,0.0040,0.6456},
-        {0.2148,0.0073,1.0391}, {0.2839,0.0116,1.3856}, {0.3285,0.0168,1.6230},
-        {0.3483,0.0230,1.7471}, {0.3481,0.0298,1.7826}, {0.3362,0.0380,1.7721},
-        {0.3187,0.0480,1.7441}, {0.2908,0.0600,1.6692}, {0.2511,0.0739,1.5281},
-        {0.1954,0.0910,1.2876}, {0.1421,0.1126,1.0419}, {0.0956,0.1390,0.8130},
-        {0.0580,0.1693,0.6162}, {0.0320,0.2080,0.4652}, {0.0147,0.2586,0.3533},
-        {0.0049,0.3230,0.2720}, {0.0024,0.4073,0.2123}, {0.0093,0.5030,0.1582},
-        {0.0291,0.6082,0.1117}, {0.0633,0.7100,0.0782}, {0.1096,0.7932,0.0573},
-        {0.1655,0.8620,0.0422}, {0.2257,0.9149,0.0298}, {0.2904,0.9540,0.0203},
-        {0.3597,0.9803,0.0134}, {0.4334,0.9950,0.0087}, {0.5121,1.0000,0.0057},
-        {0.5945,0.9950,0.0039}, {0.6784,0.9786,0.0027}, {0.7621,0.9520,0.0021},
-        {0.8425,0.9154,0.0018}, {0.9163,0.8700,0.0017}, {0.9786,0.8163,0.0014},
-        {1.0263,0.7570,0.0011}, {1.0567,0.6949,0.0010}, {1.0622,0.6310,0.0008},
-        {1.0456,0.5668,0.0006}, {1.0026,0.5030,0.0003}, {0.9384,0.4412,0.0002},
-        {0.8544,0.3810,0.0002}, {0.7514,0.3210,0.0001}, {0.6424,0.2650,0.0000},
-        {0.5419,0.2170,0.0000}, {0.4479,0.1750,0.0000}, {0.3608,0.1382,0.0000},
-        {0.2835,0.1070,0.0000}, {0.2187,0.0816,0.0000}, {0.1649,0.0610,0.0000},
-        {0.1212,0.0446,0.0000}, {0.0874,0.0320,0.0000}, {0.0636,0.0232,0.0000},
-        {0.0468,0.0170,0.0000}, {0.0329,0.0119,0.0000}, {0.0227,0.0082,0.0000},
-        {0.0158,0.0057,0.0000}, {0.0114,0.0041,0.0000}, {0.0081,0.0029,0.0000},
-        {0.0058,0.0021,0.0000}, {0.0041,0.0015,0.0000}, {0.0029,0.0010,0.0000},
-        {0.0020,0.0007,0.0000}, {0.0014,0.0005,0.0000}, {0.0010,0.0004,0.0000},
-        {0.0007,0.0002,0.0000}, {0.0005,0.0002,0.0000}, {0.0003,0.0001,0.0000},
-        {0.0002,0.0001,0.0000}, {0.0002,0.0001,0.0000}, {0.0001,0.0000,0.0000},
-        {0.0001,0.0000,0.0000}, {0.0001,0.0000,0.0000}, {0.0000,0.0000,0.0000}
-    };
+    /* White scaling factors.
+       Dividing by yw scales the white luminance to unity, as conventional. */
+       
+    rw = ((rx * xw) + (ry * yw) + (rz * zw)) / yw;
+    gw = ((gx * xw) + (gy * yw) + (gz * zw)) / yw;
+    bw = ((bx * xw) + (by * yw) + (bz * zw)) / yw;
 
-    for (i = 0, lambda = 380; lambda < 780.1; i++, lambda += 5) {
-        double Me;
+    /* xyz -> rgb matrix, correctly scaled to white. */
+    
+    rx = rx / rw;  ry = ry / rw;  rz = rz / rw;
+    gx = gx / gw;  gy = gy / gw;  gz = gz / gw;
+    bx = bx / bw;  by = by / bw;  bz = bz / bw;
 
-        Me = (*spec_intens)(lambda);
-        X += Me * cie_colour_match[i][0];
-        Y += Me * cie_colour_match[i][1];
-        Z += Me * cie_colour_match[i][2];
-    }
-    XYZ = (X + Y + Z);
-    *x = X / XYZ;
-    *y = Y / XYZ;
-    *z = Z / XYZ;
+    /* rgb of the desired point */
+    
+    *r = (rx * xc) + (ry * yc) + (rz * zc);
+    *g = (gx * xc) + (gy * yc) + (gz * zc);
+    *b = (bx * xc) + (by * yc) + (bz * zc);
 }
 
-/* Cette nouvelle fonction différente de la précédente ne rend pas x y
+/*                            INSIDE_GAMUT
+
+     Test whether a requested colour is within the gamut
+     achievable with the primaries of the current colour
+     system.  This amounts simply to testing whether all the
+     primary weights are non-negative. */
+
+int inside_gamut(double r, double g, double b)
+{
+    return (r >= 0) && (g >= 0) && (b >= 0);
+}
+
+/*                          CONSTRAIN_RGB
+
+    If the requested RGB shade contains a negative weight for
+    one of the primaries, it lies outside the colour gamut 
+    accessible from the given triple of primaries.  Desaturate
+    it by adding white, equal quantities of R, G, and B, enough
+    to make RGB all positive.  The function returns 1 if the
+    components were modified, zero otherwise.
+    
+*/
+
+int constrain_rgb(double *r, double *g, double *b)
+{
+    double w;
+
+    /* Amount of white needed is w = - min(0, *r, *g, *b) */
+    
+    w = (0 < *r) ? 0 : *r;
+    w = (w < *g) ? w : *g;
+    w = (w < *b) ? w : *b;
+    w = -w;
+
+    /* Add just enough white to make r, g, b all positive. */
+    
+    if (w > 0) {
+        *r += w;  *g += w; *b += w;
+        return 1;                     /* Colour modified to fit RGB gamut */
+    }
+
+    return 0;                         /* Colour within RGB gamut */
+}
+
+/*                          GAMMA_CORRECT_RGB
+
+    Transform linear RGB values to nonlinear RGB values. Rec.
+    709 is ITU-R Recommendation BT. 709 (1990) ``Basic
+    Parameter Values for the HDTV Standard for the Studio and
+    for International Programme Exchange'', formerly CCIR Rec.
+    709. For details see
+    
+       http://www.poynton.com/ColorFAQ.html
+       http://www.poynton.com/GammaFAQ.html
+*/
+
+void gamma_correct(const struct colourSystem *cs, double *c)
+{
+    double gamma;
+
+    gamma = cs->gamma;
+
+    if (gamma == GAMMA_REC709) {
+	/* Rec. 709 gamma correction. */
+	double cc = 0.018;
+	
+	if (*c < cc) {
+	    *c *= ((1.099 * pow(cc, 0.45)) - 0.099) / cc;
+	} else {
+	    *c = (1.099 * pow(*c, 0.45)) - 0.099;
+	}
+    } else {
+	/* Nonlinear colour = (Linear colour)^(1/gamma) */
+	*c = pow(*c, 1.0 / gamma);
+    }
+}
+
+void gamma_correct_rgb(const struct colourSystem *cs, double *r, double *g, double *b)
+{
+    gamma_correct(cs, r);
+    gamma_correct(cs, g);
+    gamma_correct(cs, b);
+}
+
+/*  	    	    	    NORM_RGB
+
+    Normalise RGB components so the most intense (unless all
+    are zero) has a value of 1.
+    
+*/
+
+void norm_rgb(double *r, double *g, double *b)
+{
+#define Max(a, b)   (((a) > (b)) ? (a) : (b))
+    double greatest = Max(*r, Max(*g, *b));
+    
+    if (greatest > 0) {
+    	*r /= greatest;
+	*g /= greatest;
+	*b /= greatest;
+    }
+#undef Max
+}
+
+
+ /*-----------------------------------*/
+ /*-----------------------------------*/
+
+
+
+/*                          SPECTRUM_TO_XYZ
+
+    Calculates the CIE X, Y, and Z coordinates corresponding to
+    a light source with spectral distribution given by  the
+    function SPEC_INTENS, which is called with a series of
+    wavelengths between 380 and 780 nm (the argument is
+    expressed in meters), which returns emittance at  that
+    wavelength in arbitrary units.  The chromaticity
+    coordinates of the spectrum are returned in the x, y, and z
+    arguments which respect the identity:
+
+            x + y + z = 1.
+*/
+
+/* Modified on August 2016 by MH
+ Cette nouvelle fonction différente de la précédente ne rend pas x y
 et z tels qu'ils sont définis dans les conventions
 de notations mais rend les valeur _X_ etc.  qui sont le rapport : X/Xn */
 
@@ -437,6 +668,32 @@ double *_Z_, double *L, double *a, double *b)
   *b = 200.0 * (( *f)( *_Y_/Yn  )- (*f)( *_Z_/Zn ));
 }
 
+
+
+/*---------------------------*/
+/*   RGB_to_Hexadecimal       */
+
+
+void RGB_to_Hex (double *R, double *G, double *B)
+{
+	double rgb;
+	int i;
+  	rgb = (*R * 65536)+(*G *256)+ *B;
+    i=rgb;
+    printf ("decimal RGB: %d\n", i);
+    printf ("hexadecimal RGB: %X\n",i);
+    
+  //   char buffer [33];
+//     itoa (i,buffer,16);
+//     printf ("hexadecimal: %s\n",buffer);
+}
+
+
+
+
+
+
+
 /*---------------------------*/
 void Draw_Node_Graph (char* FILE_OUT, char* x_label, char*
 y_label,char* x_range,double Lab[30][3] ){
@@ -581,12 +838,14 @@ int mygeti(int *result)
 
 int main_yoshi (int nlines, int nech, char* data_file)
 { double Lab[30][3];
- double XYZ[30][3];
+	double XYZ[30][3];
+	double RGB[30][3];//r, g, b;
+	struct colourSystem *cs = &SMPTEsystem;
 
    printf("-------------------------------\n");
    printf("  STARTING PROGRAM\n");
-	  printf("-------------------------------\n");
-	header();
+   printf("-------------------------------\n");
+   header();
    printf("-------------------------------\n");
    printf("This program calculates xyz and L*a*b* CIE values from a transmission spectrum \n");
    printf("The input spectra should be transmission data (between 0 and 1)  \n");
@@ -613,7 +872,7 @@ int main_yoshi (int nlines, int nech, char* data_file)
 
   initialize_Lambda (Nlam, Lambda);
   read_data(data_file, Ech, Nlam, Nlines, column_name, Lambda_data, ME_data);
-	ME_interpolation (Nlam, Ech, Nlines, Lambda, Lambda_data, ME_expected, ME_data);
+  ME_interpolation (Nlam, Ech, Nlines, Lambda, Lambda_data, ME_expected, ME_data);
 
   /*  printf("  %5.5lf x  %5.5lf y   %5.5lf z\n",_X_,_Y_,_Z_);*/
   int i =0;
@@ -629,6 +888,23 @@ int main_yoshi (int nlines, int nech, char* data_file)
 	  XYZ[i][2]= _Z_;
 	  printf("  %5.5lf _X_  %5.5lf _Y_   %5.5lf _Z_ \n",_X_,_Y_,_Z_);
 	  printf("  %5.5lf L  %5.5lf a   %5.5lf b\n",L,a,b);
+	  	printf(" Calculation of the RGB values \n");
+/*conversion into RBG*/	  
+// 	  xyz_to_rgb(cs, x, y, z, &r, &g, &b);
+		double R, G, B;
+		xyz_to_rgb(cs, _X_, _Y_, _Z_, &R, &G, &B);
+        if (constrain_rgb(&R, &G, &B)) {
+	    norm_rgb(&R, &G, &B);
+	    RGB[i][0]= R;
+	    RGB[i][1]= G;
+	    RGB[i][2]= B;
+        printf("%.3f %.3f %.3f (Approximation)\n", R, G, B);
+        } else {
+	    norm_rgb(&R, &G, &B);
+            printf("%.3f %.3f %.3f\n", R, B, B);
+        }
+   		//printf("Hexadecimal value \n");
+   		RGB_to_Hex(&R, &G, &B);
     }
   for (i=Ech; i<29; i++){
 	  Lab[i+1][0]= 0;

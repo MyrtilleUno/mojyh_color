@@ -1,4 +1,6 @@
 *.cm[iox]
+_Lab
+.DS_Store
 .*.sw[op]
 _build
 *.byte
@@ -28,3 +30,4 @@ gothor
 scanner.c
 scanner.h
 makefile
+test/
