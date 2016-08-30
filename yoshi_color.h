@@ -54,6 +54,6 @@ extern void header ();
 
 extern int mygeti(int *result);
 
-extern int main_yoshi (int nlines, int nech, char* data_file);
+extern int main_yoshi (int nlines, int nech, char* data_file, bool is_quanty);
 
 #endif

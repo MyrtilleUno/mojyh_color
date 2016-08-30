@@ -838,7 +838,7 @@ int mygeti(int *result)
 
 
 
-int main_yoshi (int nlines, int nech, char* data_file)
+int main_yoshi (int nlines, int nech, char* data_file, bool is_quanty)
 { double Lab[30][3];
 	double XYZ[30][3];
 	double RGB[30][3];//r, g, b;
@@ -857,6 +857,7 @@ int main_yoshi (int nlines, int nech, char* data_file)
    printf("-------------------------------\n");
 /*printf("File is: %s\n",argv[1]);*/
   int Ech = nech;
+  if (is_quanty) {Ech = 1;}
   /*
   do {
 	fputs("Enter the number of spectra in your input file: ", stdout);

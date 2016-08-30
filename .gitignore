@@ -31,3 +31,4 @@ scanner.c
 scanner.h
 makefile
 test/
+log
