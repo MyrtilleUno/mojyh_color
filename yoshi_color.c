@@ -128,60 +128,53 @@ double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, d
 /*---------------------------*/
 
 // 
-// void read_data_quanty (char* data, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]){
-// 
-//   FILE* file_input = NULL;
-// 
-//   int l, ech;
-// 
-//   file_input = fmemopen (data, strlen (data), "r");
-// /*  file_input = fopen(data_file, "r");
-//   if (file_input != NULL){}
-//   else {
-//     printf("impossible to read file\n");
-//     return;
-//   }
-// */
-// 
-//   for (ech = 0; ech < nech +1; ech++){
-//     fscanf(file_input,"%s", column_name[ech]);
-//     printf( "%s\n", column_name[ech]) ;
-//   }
-//   for (l=0; l< Nlines;l++){
-//     fscanf(file_input,"%lf", &Lambda_data[l]);
-//     for (ech = 0; ech < nech ;ech++){
-//       fscanf(file_input,"%lf", &ME_data[l][ech]);
-//     }
-//   }
-//   fclose(file_input);
-//   printf("data have been read correctly\n");
-//   printf("-------------------------------\n");
-//   /*printf( "%lf\n", ME_data[1][3]) ;*/
-// }
-//     /* Old Stuff
-//        for (c = 0; c< Ech+1 ;c++){
-//        fscanf(file_input,"%lf",&dummy_ME[c]);
-//        }
-//        int current_lambda = dummy_ME[0];
-//        if (current_lambda>=380 && current_lambda<=780 && (current_lambda % 5)==0){
-//        int index_ME_data = (current_lambda -380)/5;
-// 
-//        for (c = 0; c< Ech ;c++){
-//        ME_data[index_ME_data][c] = dummy_ME[c+1];
-//        ME_expected[index_ME_data][c] = dummy_ME[c+1];
-//        }
-//        End of old stuff*/
-// 
-// 
-// double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, double ME_expected [nlam][nech])
-// {
-//     int lambda_index = (wave_length -380.0) / 5;
-// /*    printf( "%lf\n", ME_data [lambda_index][echantillon]) ;*/
-//     return ME_expected [lambda_index][echantillon];
-// 
-// }
+ void read_data_quanty (char* data, int Nlam, int Nlines, char column_name[3][Word], double Lambda_data[Nlines], double ME_data[Nlines][1]){
+ 
+   FILE* file_input = NULL;
+ 
+   int l, ech;
+ 
+   file_input = fmemopen (data, strlen (data), "r");
+ /*  file_input = fopen(data_file, "r");
+   if (file_input != NULL){}
+   else {
+     printf("impossible to read file\n");
+     return;
+   }
+ */
+ 
+   for (ech = 0; ech < 3; ech++){
+     fscanf(file_input,"%s", column_name[ech]);
+     printf( "%s\n", column_name[ech]) ;
+   }
+   double energy[Nlines], re[Nlines], epsilon[Nlines];
+   for (l=0; l< Nlines;l++){
+     fscanf(file_input,"%lf", &energy[l]);
+     Lambda_data[l] = eV_to_nm (energy[l]);
+     //for (ech = 1; ech < nech ;ech++){
+     fscanf(file_input,"%lf", &re[l]);
+     fscanf(file_input,"%lf", &epsilon[l]);
+     ME_data[l][0] = eps_to_trans(epsilon[l]);
+   //  }
+   }
+   fclose(file_input);
+   printf("data have been read correctly\n");
+   printf("-------------------------------\n");
+   /*printf( "%lf\n", ME_data[1][3]) ;*/
+ }
+
+/* Note that the conversion is made by default for a thickness of 1cm and 1mmol/L 
+*/
+double eps_to_trans (double epsilon)
+{
+return (pow(10,(-1*1E-3*epsilon)))  ; // Beer-Lamberts law
+}
 
 
+double eV_to_nm (double energy)
+{
+return (1E7/(8060*energy))  ;
+}
 /*---------------------------*/
 
 double interpolation (double lambda1, double val1, double lambda2, double val2, double lambda_expected)
@@ -683,7 +676,7 @@ void RGB_to_Hex (double *R, double *G, double *B)
   	rgb = (*R * 65536)+(*G *256)+ *B;
     i=rgb;
     printf ("decimal RGB: %d\n", i);
-    printf ("hexadecimal RGB: %X\n",i);
+    printf ("hexadecimal RGB: 0x%02X\n",i);
     
   //   char buffer [33];
 //     itoa (i,buffer,16);
