@@ -155,19 +155,21 @@ double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, d
      fscanf(file_input,"%lf", &re[l]);
      fscanf(file_input,"%lf", &epsilon[l]);
      ME_data[l][0] = eps_to_trans(epsilon[l]);
+   //  printf( "%lf\t%lf\n", Lambda_data[l] , ME_data[l][0]) ;
    //  }
    }
    fclose(file_input);
    printf("data have been read correctly\n");
    printf("-------------------------------\n");
-   /*printf( "%lf\n", ME_data[1][3]) ;*/
+   
  }
 
 /* Note that the conversion is made by default for a thickness of 1cm and 1mmol/L 
+NOTE THAT in Quanty output the spectra is -Im so there is no "-" in the equation
 */
 double eps_to_trans (double epsilon)
 {
-return (pow(10,(-1*1E-3*epsilon)))  ; // Beer-Lamberts law
+return (pow(10,(1.0*(1.0E-3)*epsilon)))  ; // Beer-Lamberts law
 }
 
 
@@ -676,7 +678,7 @@ void RGB_to_Hex (double *R, double *G, double *B)
   	rgb = (*R * 65536)+(*G *256)+ *B;
     i=rgb;
     printf ("decimal RGB: %d\n", i);
-    printf ("hexadecimal RGB: 0x%02X\n",i);
+    printf ("hexadecimal RGB: %06X\n",i);
     
   //   char buffer [33];
 //     itoa (i,buffer,16);
