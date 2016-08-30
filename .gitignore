@@ -27,3 +27,4 @@ gothor
 *_data
 scanner.c
 scanner.h
+makefile
