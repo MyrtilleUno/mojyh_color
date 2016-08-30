@@ -377,6 +377,7 @@ static double cie_colour_match[81][3] = {
         double Me;
 
         Me = ME_expected[i][echantillon];
+//        printf("%f\n", Me);          
         X += 5* Me * cie_colour_match[i][0] * D65[i][0] ;
         Y += 5* Me * cie_colour_match[i][1] * D65[i][0];
         Z += 5* Me * cie_colour_match[i][2] * D65[i][0];
@@ -394,6 +395,7 @@ K2   = 100 / K;
 *_X_ = K2 * X / 95.0429669;
 *_Y_ = K2 * Y / 100;
 *_Z_ = K2 * Z / 108.88005470;
+printf("\n");
 printf("%f\n", K2*X);
 printf("%f\n", K2*Y);
 printf("%f\n", K2*Z);

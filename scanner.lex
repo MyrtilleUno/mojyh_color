@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "yoshi_color.h"
+
 char data[10000000];
 int nblank_lines, nlines, nword, nchar, ncols;
 bool is_first_ech_line = true;
@@ -47,6 +48,8 @@ void check_ncols (int length, char text[length]) {
 
 %}
 nl [\n\r]
+Emin Emin.+[\n\r]
+dE dE.+[\n\r]
 int [\+-]?[0-9]+
 float {int}\.?{int}
 num {float}[eE]?{int}?
@@ -55,15 +58,38 @@ num_windows {num_blank}+{num}[\r]$
 num_list {num_blank}+{num}$
 
 %%
+{Emin}|{dE} { ; }
 {num_windows} { nlines++; char* tmp = remove_string (yyleng, yytext); check_ncols (yyleng - 1, tmp); strcat(data, tmp); strcat(data, "\n"); yymore(); }
 {num_list} { nlines++; check_ncols (yyleng, yytext); strcat(data, yytext); strcat(data, "\n"); yymore(); }
 ^{nl} { nblank_lines++; nchar++; }
 [^ \t\n\r]+ { nword++; nchar+= yyleng; }
 .|{nl} { ; }
 %%
+
+
+
 int main (int argc, char* argv[]) {
 // open a file handle to a particular file:
+
   char* data_file = argv[1];
+  if (argc < 3) {
+    printf("Please indicate either spectro or quanty as second argument.\n");
+    return -1;
+  }
+
+  char* filetype = argv[2];
+  bool is_quanty = false;
+  if (strcmp(filetype,"quanty") == 0) {
+    is_quanty = true;
+  }
+  else if (strcmp(filetype,"spectro") == 0) {
+    is_quanty = false;
+  }
+  else {
+    printf("Please indicate either spectro or quanty as second argument.\n");
+    return -1;
+  }
+
 	FILE *myfile = fopen(data_file, "r");
 	// make sure it's valid:
 	if (!myfile) {
@@ -76,6 +102,8 @@ int main (int argc, char* argv[]) {
 	yylex();
   fclose(myfile);
   printf("%d\t%d\t%d\n", nblank_lines, nlines, ncols - 1);
+  printf("Data of interest:\n %s\n", data);
+
   return main_yoshi(nlines, ncols-1, data);
 
 }
