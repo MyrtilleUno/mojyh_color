@@ -4,6 +4,12 @@
 
 void read_data (char* data_file, int nech, int Nlam, int Nlines, char column_name[nech+1][Word], double Lambda_data[Nlines], double ME_data[Nlines][nech]);
 
+void read_data_quanty (char* data, int Nlam, int Nlines, char column_name[3][Word], double Lambda_data[Nlines], double ME_data[Nlines][1]);
+
+extern double eps_to_trans (double epsilon);
+
+extern double eV_to_nm(double energy);
+
 extern double yoshi_spectrum(double wave_length, int echantillon, int nlam, int nech, double ME_expected [nlam][nech]);
 
 extern double interpolation (double lambda1, double val1, double lambda2, double val2, double lambda_expected);
