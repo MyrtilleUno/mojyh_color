@@ -34,7 +34,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include "yoshi_color.h"
-
+#include "fmemopen.h"
 /*
 void get_parameters (char* data_file){
 
