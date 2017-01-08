@@ -104,6 +104,6 @@ int main (int argc, char* argv[]) {
   printf("%d\t%d\t%d\n", nblank_lines, nlines, ncols - 1);
   //printf("Data of interest:\n %s\n", data);
   if (is_quanty) {ncols = 3;} 
-  return main_mojyh(nlines, ncols - 1, data, is_quanty);
+  return main_yoshi(nlines, ncols - 1, data, is_quanty);
 
 }
