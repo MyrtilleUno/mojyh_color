@@ -1,5 +1,7 @@
 Welcome to ** Mojyh_Color ** Colorimetry code
 *********************************************
+This software is under the GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
 
 This software was originaly created under the name "Yoshi_color" for 
 the PhD thesis of M.O.J.Y. Hunault.
