@@ -24,6 +24,8 @@ _build
 *.dir
 yoshi_color
 Yoshi_color
+mojyh_color
+Mojyh_color
 gothor
 *.txt
 *_data
