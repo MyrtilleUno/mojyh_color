@@ -1,5 +1,5 @@
 /*
-       Yoshi Color
+       mojyh Color
  
  Programme écrit en langage C permettant de calculer les coordonnées Lab d'une couleur
  à partir du spectre de transmission de l'échantillon.
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
-#include "yoshi_color.h"
+#include "mojyh_color.h"
 #include "fmemopen.h"
 /*
 void get_parameters (char* data_file){
@@ -763,61 +763,7 @@ void write_xyz (int nech, double Phys[30][3],char* FILE_OUT, char column_name[ne
 	
 }
 /*---------------------------*/
-void header () {
-  if (false) {
-	
-	printf("                          @@@  @@@                 \n");
-	printf("                          @@@  @@@                 \n");
-	printf("                        @@...@@...@@               \n");
-	printf("                        @@...  .....@              \n");
-	printf("                       @....      ..@              \n");
-	printf("                 @@@@@@#..` @@  @@  @              \n");
-	printf("                 @#####@..  @@  @@  @              \n");
-	printf("                @#'''''@    @@  @@  @              \n");
-	printf("                @@'''#@@            @@@@@          \n");
-	printf("                @@'''@@@            @@@@@          \n");
-	printf("               `@@@@@.....     .  @@.....@         \n");
-	printf("              @@@@@@@.....    `.` @@.....@         \n");
-	printf("              @@''@................,......@@       \n");
-	printf("             @''''@................,.@@..@@@@@     \n");
-	printf("             @''''@..................@@..@@@@@     \n");
-	printf("             @''''@.........................@@     \n");
-	printf("              @#@@@.......    ..............@@     \n");
-	printf("              @@@@@.....`      .............@@     \n");
-	printf("                @@@..,..       @@...........@@     \n");
-	printf("                @@'@@...       @@...........@@     \n");
-	printf("                @#'@@...     @@@@...........@@     \n");
-	printf("                  @@#@..`    @@@@.......,...@@     \n");
-	printf("                  @#@@....     @@.........@@       \n");
-	printf("                  @'#@.....     @@.....@@@         \n");
-	printf("             @@@@@@@@.,.....    @@....,@@@    \n");     
-	printf("             @@@@@@@@.......   @@@@@@@@@@  \n");        
-	printf("           @#'''@@@@@......`   @@@@@@@@@@          \n");
-	printf("           ##'''@@@@@..,...    @                   \n");
-	printf("         @@'''#@@@...@@...     @                   \n");
-	printf("    @@@@@  ###......@...`      @                   \n");
-	printf("    @@@@@  @@@.,` ` @...       @                   \n");
-	printf("    @@...@@@@...    .@@        @                   \n");
-	printf("    @@...@@@@...    @@@        @                   \n");
-	printf("    @@ ..@@.....    @@@        @                   \n");
-	printf("    @@ ..@@.........,@@        @                   \n");
-	printf("    @@   @@........@@        @@                    \n");
-	printf("      @@ @@........@@      @@                      \n");
-	printf("      @@   @@@@@@@@        @@                      \n");
-	printf("      @@   @@@@@@@@       @                        \n");
-	printf("        @@@@@@@@@   `     @                        \n");
-	printf("        @@@@@@@@@         @                        \n");
-	printf("        @+++''''@   @@@@@@                         \n");
-	printf("        @++'''''@   @#@@@@                         \n");
-	printf("        @++'''''@@@@#'@@@#@                        \n");
-	printf("      @@++++'`'''#@++''''` #@                      \n");
-	printf("      @@++++' '''#@++''''` #@                      \n");
-	printf("      @@+++++''''#@+++'''''#@                      \n");
-	printf("      @@+++++''''#@+++'''''@@                      \n");
-	printf("      @@@@@@@@@@@@@@@@@@@@@@@    \n");    	
-  }
-  else printf("\n");
-}
+
 
 /*---------------------------*/
 
@@ -842,7 +788,6 @@ int main_yoshi (int nlines, int nech, char* data_file, bool is_quanty)
    printf("-------------------------------\n");
    printf("  STARTING PROGRAM\n");
    printf("-------------------------------\n");
-   header();
    printf("-------------------------------\n");
    printf("This program calculates xyz and L*a*b* CIE values from a transmission spectrum \n");
    printf("The input spectra should be transmission data (between 0 and 1)  \n");
